@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<!-- 总结：1.在手机端需要添加zepto的touch.js，我这个可以测试下是否加上了
+		   2.可以调用animate.css简化动画操作
+		   3.记得canvas的一些简单操作，不要弄欢笑了
+		   4.为什么在取得canvas的时候需要添加[0]，这样就可以把zepto转换成dom节点了，然后调取相应的方法 
+		   5.不要忘了meta，这个是对于手机来说进行缩放的
+		-->
+		<title>移动相册</title>
+		<meta name='viewport' content='width=device-width,initial-scale=1.0' >
+		<script type="text/javascript" src='zepto.min.js'></script>
+		<script type="text/javascript" src='zepto-touch.js'></script>
+		<link rel="stylesheet" type="text/css" href="css/animate.css">
+		<style type="text/css">
+			body,div,ul,li{
+				margin:0;
+				padding:0;
+			}
+
+			body{
+				background:black;
+			}
+
+			ul{
+				/*text-decoration: none;*/
+				list-style:none;
+				overflow:hidden;
+			}
+
+			li{
+				float:left;
+				overflow:hidden;
+			}
+
+			.large{
+				width:100%;
+				height:100%;
+				background: black;
+				position: absolute;
+				top:0px;
+				left:0px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class='container' id='container'>
+			<ul>
+
+			</ul>
+		</div>
+
+		<div class='large animated fadeInDown' id='large_container' style='display:none'>
+			<img id='large_img'>	
+		</div>
+
+		<script type="text/javascript">
+			$(function(){
+				var count=17;
+				var zWin=$(window);
+				var width=zWin.width();
+				var height=zWin.height();
+				var padding='2';
+				var imgWidth=Math.floor((width-2*3)/4);
+				var template='';
+				var p='';
+				var container=$('#container');
+				var imgContainer=$('#large_img');
+				var domImg=imgContainer[0];
+				var divContainer=$('#large_container');
+
+				function render(){
+					for(var i=1;i<=17;i++){
+						p=padding;
+						if(i%4==1){
+							p='0';
+						}
+						template+='<li data-id="'+i+'" class="animated bounceIn" style="width:'+imgWidth+'px;height:'+ imgWidth +'px;padding-left:'+p+'px;padding-top:'+padding+'px"><canvas id="cvs_'+i+'"></canvas></li>';
+						var imgObject=new Image();
+						imgObject.index=i;
+						imgObject.onload=function(){
+							var cvs=$('#cvs_'+this.index)[0].getContext('2d');
+							$('#cvs_'+this.index)[0].width=this.width;
+							$('#cvs_'+this.index)[0].height=this.height;
+							cvs.drawImage(this,0,0);
+						}
+						imgObject.src='img/'+imgObject.index+'.jpg';
+					}
+					$('.container ul').html(template);
+				}
+				render();
+
+				var cid=0;
+				// 开始显示大图
+				container.delegate('li','click',function(){
+					var _id=$(this).attr('data-id');
+					cid=_id;
+					loadImage(_id);
+				});
+
+				imgContainer.swipeLeft(function(){
+					cid++;
+					if(cid>17){
+						cid=17;
+					}
+					loadImage(cid,function(){
+						domImg.addEventListener('webkitAnimationEnd',function(){
+							imgContainer.removeClass('animated bounceInRight');
+							domImg.removeEventListener('webkitAnimationEnd',this,false);
+						},false);
+						imgContainer.addClass('animated bounceInRight');
+					});
+
+				});
+
+				function loadImage(id,callback){
+					container.hide();
+					$('#large_container').show();
+					var img=new Image();
+					var imgSrc=img.src='img/'+id+'.large.jpg';
+					img.onload=function(){
+						var w=this.width;
+						var h=this.height;
+						imgContainer.attr('src',imgSrc);
+						imgContainer.attr('height','auto').attr('width','auto');
+						imgContainer.css('padding-left','0px').css('padding-top','0px');
+						var realw = parseInt((width - height*w/h)/2);
+						var realh = parseInt((height - width*h/w)/2);
+						if(h/w>1.2){
+							imgContainer.attr('height',height).css('padding-left',realw+'px');
+						}else{
+							imgContainer.attr('width',width).css('padding-top',realh+'px');
+						}
+					}
+
+					callback&&callback();
+				}
+
+				divContainer.tap(function(){
+					container.show();
+					divContainer.hide();
+				});
+
+	});
+
+
+</script>
+</body>
+</html>
