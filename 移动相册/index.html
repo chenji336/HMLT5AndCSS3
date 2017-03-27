@@ -114,6 +114,21 @@
 
 				});
 
+				imgContainer.swipeRight(function(){
+					cid--;
+					if(cid<1){
+						cid=1;
+					}
+					loadImage(cid,function(){
+						domImg.addEventListener('webkitAnimationEnd',function(){
+							imgContainer.removeClass('animated bounceInLeft');
+							domImg.removeEventListener('webkitAnimationEnd',this,false);
+						},false);
+						imgContainer.addClass('animated bounceInLeft');
+					});
+
+				});
+
 				function loadImage(id,callback){
 					container.hide();
 					$('#large_container').show();
